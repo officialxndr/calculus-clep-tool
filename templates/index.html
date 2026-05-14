@@ -4,12 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculus Study Tool</title>
-
-  <!-- KaTeX -->
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-
-  <!-- App styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
@@ -17,44 +12,37 @@
 <header class="app-header">
   <div class="header-inner">
     <span class="logo">&#8747; Calculus Study Tool</span>
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="solve">Solve</button>
+      <button class="tab-btn" data-tab="practice">Practice</button>
+      <button class="tab-btn" data-tab="exam">Mock Exam</button>
+    </nav>
   </div>
 </header>
 
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: SOLVE                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-solve" class="tab-panel active">
 <div class="app-body">
 
-  <!-- ── Left column ─────────────────────────────────────────── -->
   <main class="main-col">
-
-    <!-- Input card -->
     <section class="card input-card">
       <h2 class="card-title">Enter a Problem</h2>
-
-      <!-- Operation selector -->
       <div class="op-selector">
         <label class="op-option">
           <input type="radio" name="op-type" value="derivative" checked />
-          <span class="op-label">
-            <span class="op-icon">d/dx</span>
-            Derivative
-          </span>
+          <span class="op-label"><span class="op-icon">d/dx</span>Derivative</span>
         </label>
         <label class="op-option">
           <input type="radio" name="op-type" value="integral" />
-          <span class="op-label">
-            <span class="op-icon">&#8747;</span>
-            Integral
-          </span>
+          <span class="op-label"><span class="op-icon">&#8747;</span>Integral</span>
         </label>
         <label class="op-option">
           <input type="radio" name="op-type" value="limit" />
-          <span class="op-label">
-            <span class="op-icon">lim</span>
-            Limit
-          </span>
+          <span class="op-label"><span class="op-icon">lim</span>Limit</span>
         </label>
       </div>
-
-      <!-- Limit-specific controls (hidden unless Limit is selected) -->
       <div id="limit-controls" class="limit-controls" style="display:none">
         <div class="limit-row">
           <span class="limit-arrow-label">x &#8594;</span>
@@ -62,71 +50,47 @@
             <math-field id="limit-point" style="width:110px"></math-field>
           </div>
           <div class="direction-selector">
-            <label class="dir-option">
-              <input type="radio" name="limit-dir" value="left" />
-              <span class="dir-label">x&#8315; (left)</span>
-            </label>
-            <label class="dir-option">
-              <input type="radio" name="limit-dir" value="both" checked />
-              <span class="dir-label">both sides</span>
-            </label>
-            <label class="dir-option">
-              <input type="radio" name="limit-dir" value="right" />
-              <span class="dir-label">x&#8314; (right)</span>
-            </label>
+            <label class="dir-option"><input type="radio" name="limit-dir" value="left" /><span class="dir-label">x&#8315; (left)</span></label>
+            <label class="dir-option"><input type="radio" name="limit-dir" value="both" checked /><span class="dir-label">both sides</span></label>
+            <label class="dir-option"><input type="radio" name="limit-dir" value="right" /><span class="dir-label">x&#8314; (right)</span></label>
           </div>
         </div>
       </div>
-
-      <!-- MathLive equation editor -->
       <div class="math-field-wrapper">
         <math-field id="math-input" style="width:100%"></math-field>
       </div>
-      <p class="math-hint">
-        Tip: type <code>^</code> for exponent, <code>/</code> for fraction,
-        <code>sqrt</code> for &radic;, or use the toolbar above the field.
-      </p>
-
-      <!-- Action buttons -->
+      <p class="math-hint">Tip: <code>^</code> exponent, <code>/</code> fraction, <code>sqrt</code> for &radic;</p>
       <div class="action-row">
         <button id="solve-btn" class="btn btn-primary">Solve</button>
         <button id="similar-btn" class="btn btn-secondary">Generate Similar</button>
         <button id="clear-btn" class="btn btn-ghost">Clear</button>
       </div>
-
       <div id="error-msg" class="error-msg" style="display:none"></div>
     </section>
 
-    <!-- Result card (hidden until a solve) -->
     <section class="card result-card" id="result-card" style="display:none">
       <h2 class="card-title">Solution</h2>
-
       <div class="result-problem-row">
         <span class="result-label">Problem:</span>
         <span id="result-problem" class="math-display"></span>
       </div>
-
       <div class="result-answer-row">
         <span class="result-label">Answer:</span>
         <span id="result-answer" class="math-display answer-highlight"></span>
       </div>
-
       <div class="steps-section">
         <h3 class="steps-title">Step-by-Step Solution</h3>
         <ol id="steps-list" class="steps-list"></ol>
       </div>
     </section>
 
-    <!-- Similar problems card -->
     <section class="card similar-card" id="similar-card" style="display:none">
       <h2 class="card-title">Similar Problems to Practice</h2>
       <div id="similar-grid" class="similar-grid"></div>
       <p class="similar-hint">Click a problem to load it into the editor.</p>
     </section>
-
   </main>
 
-  <!-- ── Right column: History ───────────────────────────────── -->
   <aside class="history-col">
     <div class="card history-card">
       <h2 class="card-title">History</h2>
@@ -136,18 +100,124 @@
     </div>
   </aside>
 
-</div><!-- .app-body -->
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: PRACTICE                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-practice" class="tab-panel" style="display:none">
+<div class="practice-body">
+
+  <div class="practice-controls card">
+    <label class="practice-topic-label">Topic:</label>
+    <select id="practice-topic" class="practice-topic-select">
+      <option value="all">All Topics</option>
+      <option value="derivatives">Derivatives</option>
+      <option value="limits">Limits</option>
+      <option value="integrals">Integrals</option>
+      <option value="applications">Applications</option>
+    </select>
+    <button id="practice-next-btn" class="btn btn-secondary">Next Question</button>
+    <span id="practice-score-badge" class="score-badge">0 / 0</span>
+  </div>
+
+  <div class="card practice-question-card" id="practice-question-card">
+    <p class="empty-state" style="padding:2rem 0">Click "Next Question" to begin practicing.</p>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB: MOCK EXAM                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-exam" class="tab-panel" style="display:none">
+
+  <!-- Pre-exam screen -->
+  <div id="exam-prescreen" class="exam-prescreen">
+    <div class="card exam-intro-card">
+      <h2>CLEP Calculus Mock Exam</h2>
+      <p class="exam-intro-meta">45 questions &nbsp;·&nbsp; 60-minute timer &nbsp;·&nbsp; Multiple choice (A–E)</p>
+      <p class="exam-intro-desc">
+        This exam covers limits, derivatives, integrals, and applications at the same
+        difficulty level as the CLEP Calculus exam. You can navigate between questions
+        freely. Your answers are auto-saved as you go.
+      </p>
+      <button id="exam-start-btn" class="btn btn-primary btn-lg">Start Exam</button>
+      <div id="exam-start-loading" style="display:none" class="exam-loading">
+        <span class="spinner" style="border-color:#3b82f6; border-top-color:transparent"></span>
+        Generating 45 questions…
+      </div>
+    </div>
+  </div>
+
+  <!-- Active exam screen -->
+  <div id="exam-screen" class="exam-screen" style="display:none">
+    <div class="exam-top-bar">
+      <span id="exam-progress">Question 1 / 45</span>
+      <span id="exam-timer" class="timer">60:00</span>
+      <button id="exam-submit-btn" class="btn btn-primary">Submit Exam</button>
+    </div>
+
+    <div class="exam-layout">
+      <div class="exam-main">
+        <div class="card exam-question-card">
+          <div class="exam-topic-badge" id="exam-topic-badge"></div>
+          <div id="exam-question-text" class="exam-question-text"></div>
+          <div id="exam-choices" class="exam-choices"></div>
+        </div>
+        <div class="exam-nav-row">
+          <button id="exam-prev-btn" class="btn btn-ghost">&#8592; Prev</button>
+          <button id="exam-next-btn" class="btn btn-secondary">Next &#8594;</button>
+        </div>
+      </div>
+
+      <div class="exam-sidebar">
+        <div class="card">
+          <h3 class="card-title" style="font-size:.85rem">Question Palette</h3>
+          <div id="exam-palette" class="exam-palette"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results screen -->
+  <div id="exam-results" class="exam-results" style="display:none">
+    <div class="score-banner" id="score-banner">
+      <div class="score-big" id="score-big">32 / 45</div>
+      <div class="score-pct" id="score-pct">71%</div>
+      <div class="score-label" id="score-label">Good effort!</div>
+    </div>
+
+    <div class="results-body">
+      <div class="card topic-breakdown-card">
+        <h3 class="card-title">Topic Breakdown</h3>
+        <table id="topic-table" class="topic-table"></table>
+      </div>
+
+      <div class="card review-card">
+        <h3 class="card-title">Question Review</h3>
+        <div id="review-list" class="review-list"></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:1.5rem 0">
+      <button id="exam-retake-btn" class="btn btn-primary">Take Another Exam</button>
+    </div>
+  </div>
+
+</div><!-- tab-exam -->
 
 <!-- KaTeX runtime + auto-render -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
-<!-- MathLive (ES module — registers <math-field> custom element) -->
+<!-- MathLive -->
 <script type="module">
   import 'https://unpkg.com/mathlive@0.101.1/dist/mathlive.min.js';
 </script>
 
-<!-- App logic -->
 <script type="module" src="/static/script.js"></script>
 
 </body>

@@ -27,13 +27,59 @@ def init_db():
                 limit_direction TEXT
             )
         """)
-        # Add columns to existing DBs that were created before limit support
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS exam_sessions (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                created         TEXT    NOT NULL,
+                completed       TEXT,
+                questions_json  TEXT    NOT NULL,
+                answers_json    TEXT,
+                score           INTEGER,
+                total           INTEGER
+            )
+        """)
         for col, col_type in [("limit_point", "TEXT"), ("limit_direction", "TEXT")]:
             try:
                 conn.execute(f"ALTER TABLE history ADD COLUMN {col} {col_type}")
             except Exception:
                 pass
         conn.commit()
+
+
+def create_exam(questions: list) -> int:
+    with _get_conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO exam_sessions (created, questions_json, total)
+               VALUES (?, ?, ?)""",
+            (datetime.now(timezone.utc).isoformat(), json.dumps(questions), len(questions)),
+        )
+        conn.commit()
+        return cur.lastrowid
+
+
+def save_exam_result(exam_id: int, answers: list, score: int):
+    with _get_conn() as conn:
+        conn.execute(
+            """UPDATE exam_sessions
+               SET answers_json=?, score=?, completed=?
+               WHERE id=?""",
+            (json.dumps(answers), score, datetime.now(timezone.utc).isoformat(), exam_id),
+        )
+        conn.commit()
+
+
+def get_exam(exam_id: int) -> dict | None:
+    with _get_conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM exam_sessions WHERE id=?", (exam_id,)
+        ).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        d["questions"] = json.loads(d["questions_json"])
+        d["answers"] = json.loads(d["answers_json"]) if d["answers_json"] else []
+        del d["questions_json"], d["answers_json"]
+        return d
 
 
 def add_entry(type_, expr_input, problem_latex, result_latex, steps,
