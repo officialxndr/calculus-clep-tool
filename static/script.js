@@ -1,6 +1,3 @@
-// Wait for MathLive's custom element to be registered
-await customElements.whenDefined("math-field");
-
 // ── DOM references ────────────────────────────────────────────
 const mathInput     = document.getElementById("math-input");
 const limitPoint    = document.getElementById("limit-point");
@@ -312,11 +309,12 @@ mathInput.addEventListener("keydown", e => {
 });
 
 // ── Boot ─────────────────────────────────────────────────────
-loadHistory();
-mathInput.focus();
-initTabs();
-initPractice();
-initExam();
+// Attach click handlers FIRST so a later failure can't leave the page dead.
+try { initTabs();    } catch (e) { console.error("initTabs failed:",    e); }
+try { initPractice();} catch (e) { console.error("initPractice failed:",e); }
+try { initExam();    } catch (e) { console.error("initExam failed:",    e); }
+try { loadHistory(); } catch (e) { console.error("loadHistory failed:", e); }
+try { mathInput.focus(); } catch { /* ignore */ }
 
 // ═════════════════════════════════════════════════════════════
 //  TAB SWITCHING
@@ -373,11 +371,10 @@ async function loadPracticeQuestion() {
 function renderPracticeQuestion(q) {
   const card = document.getElementById("practice-question-card");
 
-  const choicesHtml = q.choices.map((c, i) => `
-    <div class="mc-option" data-index="${i}" tabindex="0" role="button">
-      <span class="mc-label">${c.label}</span>
-      <span class="mc-math" data-latex="${escapeAttr(c.latex)}"></span>
-    </div>`).join("");
+  // Build choices HTML with math already rendered (no two-pass approach needed)
+  const choicesHtml = q.choices.map(c =>
+    choiceHtml(c.label, c.latex, false)
+  ).join("");
 
   card.innerHTML = `
     <div class="practice-question-text" id="pq-text"></div>
@@ -387,22 +384,23 @@ function renderPracticeQuestion(q) {
     </div>
     <div id="pq-feedback" style="display:none" class="practice-feedback"></div>`;
 
-  // Render question text
-  renderMathInEl(document.getElementById("pq-text"), q.question_latex);
+  // Render question text (handles both pure-math and mixed text+math)
+  renderQuestion(document.getElementById("pq-text"), q.question_latex);
 
-  // Render choice math
-  card.querySelectorAll(".mc-math").forEach(el => {
-    renderMathInEl(el, el.dataset.latex);
-  });
+  // Render math inside choice options
+  try {
+    renderMathInElement(card.querySelector(".mc-options"), { delimiters: _KX_DELIMS, throwOnError: false });
+  } catch { /* ignore */ }
 
-  // Choice selection
+  // Wire up index on each choice option
   let selectedIdx = null;
-  card.querySelectorAll(".mc-option").forEach(opt => {
+  card.querySelectorAll(".mc-option").forEach((opt, i) => {
+    opt.dataset.index = i;
     opt.addEventListener("click", () => {
       if (practiceState.answered) return;
       card.querySelectorAll(".mc-option").forEach(o => o.classList.remove("selected"));
       opt.classList.add("selected");
-      selectedIdx = parseInt(opt.dataset.index, 10);
+      selectedIdx = i;
       document.getElementById("pq-check-btn").disabled = false;
     });
     opt.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") opt.click(); });
@@ -441,16 +439,34 @@ function renderPracticeQuestion(q) {
         Correct answer: <strong>${data.correct_label}</strong>. `;
       fb.style.display = "block";
 
-      // Explanation as collapsible
+      // Step-by-step solution (collapsed by default)
       if (data.explanation) {
         const exDiv = document.createElement("div");
         exDiv.style.marginTop = ".6rem";
-        exDiv.innerHTML = processStepHtml(data.explanation);
-        fb.appendChild(exDiv);
-        renderMathInElement(fb, {
-          delimiters: [{ left: "$", right: "$", display: false }, { left: "$$", right: "$$", display: true }],
-          throwOnError: false,
+
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "steps-toggle-btn";
+        toggleBtn.textContent = "Show step-by-step solution";
+        exDiv.appendChild(toggleBtn);
+
+        const stepsContainer = document.createElement("div");
+        stepsContainer.style.display = "none";
+        stepsContainer.style.marginTop = ".5rem";
+        exDiv.appendChild(stepsContainer);
+
+        toggleBtn.addEventListener("click", () => {
+          if (stepsContainer.children.length === 0) {
+            renderExplanationSteps(stepsContainer, data.explanation);
+          }
+          const hidden = stepsContainer.style.display === "none";
+          stepsContainer.style.display = hidden ? "block" : "none";
+          toggleBtn.textContent = hidden
+            ? "Hide step-by-step solution"
+            : "Show step-by-step solution";
         });
+
+        fb.appendChild(exDiv);
       }
 
       // Replace Check button with Next button
@@ -472,6 +488,48 @@ function updatePracticeScoreBadge() {
   document.getElementById("practice-score-badge").textContent = `${correct} / ${attempted}`;
 }
 
+// ── KaTeX helpers ─────────────────────────────────────────────────────────────
+
+const _KX_DELIMS = [
+  { left: "$$", right: "$$", display: true  },
+  { left: "$",  right: "$",  display: false },
+];
+
+/** Split an explanation string into discrete steps at sentence boundaries.
+ *  Preserves $...$ and $$...$$ math so periods inside math don't trigger splits. */
+function splitExplanationSteps(text) {
+  if (!text) return [];
+  const blocks = [];
+  const protectedText = text.replace(
+    /\$\$([\s\S]*?)\$\$|\$([\s\S]*?)\$/g,
+    (m) => { blocks.push(m); return `\x00${blocks.length - 1}\x00`; }
+  );
+  const parts = protectedText.split(/\.\s+/).map(s => s.trim()).filter(Boolean);
+  return parts.map(p => {
+    let restored = p.replace(/\x00(\d+)\x00/g, (_, i) => blocks[parseInt(i, 10)]);
+    if (!/[.!?]$/.test(restored)) restored += ".";
+    return restored;
+  });
+}
+
+/** Render an explanation as a numbered step list (reuses .steps-list styling). */
+function renderExplanationSteps(container, explanation) {
+  const steps = splitExplanationSteps(explanation);
+  if (!steps.length) return;
+  const ol = document.createElement("ol");
+  ol.className = "steps-list";
+  steps.forEach(s => {
+    const li = document.createElement("li");
+    li.innerHTML = processStepHtml(s);
+    ol.appendChild(li);
+  });
+  container.appendChild(ol);
+  try {
+    renderMathInElement(ol, { delimiters: _KX_DELIMS, throwOnError: false });
+  } catch { /* ignore */ }
+}
+
+/** Render a pure LaTeX string into a DOM element (inline). */
 function renderMathInEl(el, latex) {
   try {
     katex.render(latex, el, { throwOnError: false, displayMode: false });
@@ -479,6 +537,31 @@ function renderMathInEl(el, latex) {
     el.textContent = latex;
   }
 }
+
+/**
+ * Render question text that may contain plain text + $...$ math.
+ * Uses the same approach as renderSteps (proven working).
+ */
+function renderQuestion(el, text) {
+  el.textContent = text;
+  try {
+    renderMathInElement(el, { delimiters: _KX_DELIMS, throwOnError: false });
+  } catch { /* ignore */ }
+}
+
+/**
+ * Build one choice row as HTML.
+ * Wraps the latex in $...$ so renderMathInElement can find and render it.
+ */
+function choiceHtml(label, latex, selected) {
+  const cls = selected ? " selected" : "";
+  // Escape only characters that would break an HTML attribute value
+  const safeLatex = latex.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<div class="mc-option${cls}" tabindex="0" role="button"><span class="mc-label">${label}</span><span class="mc-math">$${safeLatex}$</span></div>`;
+}
+
+// Alias used in solve-tab step rendering
+function setMixedMath(el, text) { renderQuestion(el, text); }
 
 function escapeAttr(s) {
   return s.replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -571,7 +654,8 @@ function navigateExam(idx) {
 }
 
 function renderExamQuestion(idx) {
-  const q = examState.questions[idx];
+  if (!examState.questions || idx < 0 || idx >= examState.questions.length) return;
+  const q     = examState.questions[idx];
   const total = examState.questions.length;
 
   document.getElementById("exam-progress").textContent = `Question ${idx + 1} / ${total}`;
@@ -581,22 +665,23 @@ function renderExamQuestion(idx) {
   const topicMap = { derivatives: "Derivatives", limits: "Limits", integrals: "Integrals", applications: "Applications" };
   document.getElementById("exam-topic-badge").textContent = topicMap[q.topic] || q.topic;
 
-  const qText = document.getElementById("exam-question-text");
-  renderMathInEl(qText, q.question_latex);
+  // Render question text
+  renderQuestion(document.getElementById("exam-question-text"), q.question_latex);
 
+  // Build and render choices
   const choicesDiv = document.getElementById("exam-choices");
-  choicesDiv.innerHTML = q.choices.map((c, i) => `
-    <div class="mc-option${examState.answers[idx] === i ? " selected" : ""}" data-index="${i}" tabindex="0" role="button">
-      <span class="mc-label">${c.label}</span>
-      <span class="mc-math" data-latex="${escapeAttr(c.latex)}"></span>
-    </div>`).join("");
+  choicesDiv.innerHTML = q.choices.map((c, i) =>
+    choiceHtml(c.label, c.latex, examState.answers[idx] === i)
+  ).join("");
+  try {
+    renderMathInElement(choicesDiv, { delimiters: _KX_DELIMS, throwOnError: false });
+  } catch { /* ignore */ }
 
-  choicesDiv.querySelectorAll(".mc-math").forEach(el => renderMathInEl(el, el.dataset.latex));
-
-  choicesDiv.querySelectorAll(".mc-option").forEach(opt => {
+  // Attach index + click handlers
+  choicesDiv.querySelectorAll(".mc-option").forEach((opt, i) => {
+    opt.dataset.index = i;
     opt.addEventListener("click", () => {
-      const chosen = parseInt(opt.dataset.index, 10);
-      examState.answers[idx] = chosen;
+      examState.answers[idx] = i;
       choicesDiv.querySelectorAll(".mc-option").forEach(o => o.classList.remove("selected"));
       opt.classList.add("selected");
       updatePalette();
@@ -718,7 +803,12 @@ function renderExamResults(data) {
     if (r.explanation) {
       const exDiv = document.createElement("div");
       exDiv.style.marginTop = ".5rem";
-      exDiv.innerHTML = `<span class="review-label">Explanation:</span> ` + processStepHtml(r.explanation);
+      const label = document.createElement("div");
+      label.className = "review-label";
+      label.textContent = "Step-by-step solution";
+      label.style.marginBottom = ".4rem";
+      exDiv.appendChild(label);
+      renderExplanationSteps(exDiv, r.explanation);
       body.appendChild(exDiv);
     }
 

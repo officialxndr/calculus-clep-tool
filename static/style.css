@@ -196,6 +196,18 @@ body {
   color: #991b1b;
 }
 
+.steps-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--blue-dark);
+  font-weight: 600;
+  font-size: .85rem;
+  cursor: pointer;
+  padding: .15rem 0;
+  text-decoration: underline;
+}
+.steps-toggle-btn:hover { color: var(--blue); }
+
 /* ── Exam layout ─────────────────────────────────────────────── */
 .exam-prescreen {
   display: flex;
