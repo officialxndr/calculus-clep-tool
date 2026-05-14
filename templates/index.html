@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculus Study Tool</title>
+
+  <!-- KaTeX -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <span class="logo">&#8747; Calculus Study Tool</span>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- ── Left column ─────────────────────────────────────────── -->
+  <main class="main-col">
+
+    <!-- Input card -->
+    <section class="card input-card">
+      <h2 class="card-title">Enter a Problem</h2>
+
+      <!-- Operation selector -->
+      <div class="op-selector">
+        <label class="op-option">
+          <input type="radio" name="op-type" value="derivative" checked />
+          <span class="op-label">
+            <span class="op-icon">d/dx</span>
+            Derivative
+          </span>
+        </label>
+        <label class="op-option">
+          <input type="radio" name="op-type" value="integral" />
+          <span class="op-label">
+            <span class="op-icon">&#8747;</span>
+            Integral
+          </span>
+        </label>
+        <label class="op-option">
+          <input type="radio" name="op-type" value="limit" />
+          <span class="op-label">
+            <span class="op-icon">lim</span>
+            Limit
+          </span>
+        </label>
+      </div>
+
+      <!-- Limit-specific controls (hidden unless Limit is selected) -->
+      <div id="limit-controls" class="limit-controls" style="display:none">
+        <div class="limit-row">
+          <span class="limit-arrow-label">x &#8594;</span>
+          <div class="math-field-wrapper limit-point-wrapper">
+            <math-field id="limit-point" style="width:110px"></math-field>
+          </div>
+          <div class="direction-selector">
+            <label class="dir-option">
+              <input type="radio" name="limit-dir" value="left" />
+              <span class="dir-label">x&#8315; (left)</span>
+            </label>
+            <label class="dir-option">
+              <input type="radio" name="limit-dir" value="both" checked />
+              <span class="dir-label">both sides</span>
+            </label>
+            <label class="dir-option">
+              <input type="radio" name="limit-dir" value="right" />
+              <span class="dir-label">x&#8314; (right)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- MathLive equation editor -->
+      <div class="math-field-wrapper">
+        <math-field id="math-input" style="width:100%"></math-field>
+      </div>
+      <p class="math-hint">
+        Tip: type <code>^</code> for exponent, <code>/</code> for fraction,
+        <code>sqrt</code> for &radic;, or use the toolbar above the field.
+      </p>
+
+      <!-- Action buttons -->
+      <div class="action-row">
+        <button id="solve-btn" class="btn btn-primary">Solve</button>
+        <button id="similar-btn" class="btn btn-secondary">Generate Similar</button>
+        <button id="clear-btn" class="btn btn-ghost">Clear</button>
+      </div>
+
+      <div id="error-msg" class="error-msg" style="display:none"></div>
+    </section>
+
+    <!-- Result card (hidden until a solve) -->
+    <section class="card result-card" id="result-card" style="display:none">
+      <h2 class="card-title">Solution</h2>
+
+      <div class="result-problem-row">
+        <span class="result-label">Problem:</span>
+        <span id="result-problem" class="math-display"></span>
+      </div>
+
+      <div class="result-answer-row">
+        <span class="result-label">Answer:</span>
+        <span id="result-answer" class="math-display answer-highlight"></span>
+      </div>
+
+      <div class="steps-section">
+        <h3 class="steps-title">Step-by-Step Solution</h3>
+        <ol id="steps-list" class="steps-list"></ol>
+      </div>
+    </section>
+
+    <!-- Similar problems card -->
+    <section class="card similar-card" id="similar-card" style="display:none">
+      <h2 class="card-title">Similar Problems to Practice</h2>
+      <div id="similar-grid" class="similar-grid"></div>
+      <p class="similar-hint">Click a problem to load it into the editor.</p>
+    </section>
+
+  </main>
+
+  <!-- ── Right column: History ───────────────────────────────── -->
+  <aside class="history-col">
+    <div class="card history-card">
+      <h2 class="card-title">History</h2>
+      <div id="history-list" class="history-list">
+        <p class="empty-state">No problems solved yet.</p>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- .app-body -->
+
+<!-- KaTeX runtime + auto-render -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<!-- MathLive (ES module — registers <math-field> custom element) -->
+<script type="module">
+  import 'https://unpkg.com/mathlive@0.101.1/dist/mathlive.min.js';
+</script>
+
+<!-- App logic -->
+<script type="module" src="/static/script.js"></script>
+
+</body>
+</html>
