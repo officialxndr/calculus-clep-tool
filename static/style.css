@@ -208,6 +208,12 @@ body {
 }
 .steps-toggle-btn:hover { color: var(--blue); }
 
+.practice-explanation,
+.review-explanation {
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
 /* ── Exam layout ─────────────────────────────────────────────── */
 .exam-prescreen {
   display: flex;

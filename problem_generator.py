@@ -61,7 +61,7 @@ def _shuffle_choices(correct_lx: str, distractor_latexes: list):
     return choices, correct_index
 
 
-def _q(name, topic, question_latex, correct_lx, distractors, explanation):
+def _q(name, topic, question_latex, correct_lx, distractors, explanation, steps=None):
     choices, correct_index = _shuffle_choices(correct_lx, distractors)
     return {
         "id": _make_id(name),
@@ -70,6 +70,7 @@ def _q(name, topic, question_latex, correct_lx, distractors, explanation):
         "choices": choices,
         "correct_index": correct_index,
         "explanation": explanation,
+        "steps": steps or [],
     }
 
 
@@ -101,9 +102,14 @@ def gen_deriv_power():
         rf"**Power rule:** $\frac{{d}}{{dx}}[ax^n] = an\,x^{{n-1}}$. "
         rf"Here $a={a},\; n={_lx(n)}$, so $f'(x) = {_lx(a)}\cdot{_lx(n)}\cdot x^{{{_lx(n-1)}}} = {c_lx}$."
     )
+    steps = [
+        rf"Identify the form: $f(x) = a\,x^n$ with $a = {_lx(a)}$ and $n = {_lx(n)}$.",
+        r"Apply the **power rule:** $\frac{d}{dx}[a\,x^n] = a\,n\,x^{n-1}$.",
+        rf"Substitute the values: $f'(x) = ({_lx(a)})({_lx(n)})\,x^{{{_lx(n-1)}}} = {c_lx}$.",
+    ]
     return _q("deriv_power", "derivatives",
               rf"If $f(x) = {_lx(expr)}$, then $f'(x) =$",
-              c_lx, d, expl)
+              c_lx, d, expl, steps)
 
 
 def gen_deriv_product_quotient():
@@ -134,9 +140,15 @@ def _gen_product_rule():
         rf"$f'={_lx(diff(x**n,x))}$, $g'={_lx(diff(trig_fn,x))}$. "
         rf"Answer: ${c_lx}$."
     )
+    steps = [
+        rf"Identify the two factors: $f(x) = {_lx(x**n)}$ and $g(x) = {_lx(trig_fn)}$.",
+        rf"Differentiate each: $f'(x) = {_lx(diff(x**n, x))}$ and $g'(x) = {_lx(diff(trig_fn, x))}$.",
+        r"Apply the **product rule:** $\frac{d}{dx}[f\,g] = f'\,g + f\,g'$.",
+        rf"Combine and simplify: ${c_lx}$.",
+    ]
     return _q("deriv_product", "derivatives",
               rf"Find $\frac{{d}}{{dx}}\left[{_lx(expr)}\right]$",
-              c_lx, [wrong_no_prod, wrong_sign, wrong_just_f, wrong_just_g], expl)
+              c_lx, [wrong_no_prod, wrong_sign, wrong_just_f, wrong_just_g], expl, steps)
 
 
 def _gen_quotient_rule():
@@ -158,9 +170,15 @@ def _gen_quotient_rule():
             rf"With $f=\tan x$, $g={k}x$: $f'=\sec^2 x$, $g'={k}$. "
             rf"Answer: ${c_lx}$."
         )
+        steps = [
+            rf"Identify numerator $f = \tan x$ and denominator $g = {k}x$.",
+            rf"Compute derivatives: $f' = \sec^2 x$ and $g' = {k}$.",
+            r"Apply the **quotient rule:** $\dfrac{f'\,g - f\,g'}{g^2}$.",
+            rf"Plug in and simplify: ${c_lx}$.",
+        ]
         return _q("deriv_quotient", "derivatives",
                   rf"If $f(x)=\dfrac{{\tan x}}{{{k}x}}$, then $f'(x)=$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
     else:
         a, m = random.randint(1, 4), random.randint(2, 4)
         b, n_exp = random.randint(1, 3), random.randint(2, 3)
@@ -176,9 +194,14 @@ def _gen_quotient_rule():
             rf"Simplify first: $\frac{{{_lx(numer)}}}{{{_lx(denom)}}} = {_lx(expr_s)}$, "
             rf"then apply power rule: ${c_lx}$."
         )
+        steps = [
+            rf"Simplify the quotient first: $\dfrac{{{_lx(numer)}}}{{{_lx(denom)}}} = {_lx(expr_s)}$.",
+            r"Apply the **power rule** to the simplified expression.",
+            rf"Result: ${c_lx}$.",
+        ]
         return _q("deriv_quotient", "derivatives",
                   rf"Find $\frac{{d}}{{dx}}\left[\frac{{{_lx(numer)}}}{{{_lx(denom)}}}\right]$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
 
 
 def gen_deriv_chain():
@@ -203,9 +226,15 @@ def gen_deriv_chain():
             rf"Here $u={_lx(inner)}$, $u'={_lx(diff(inner,x))}$. "
             rf"Answer: $\cos({_lx(inner)})\cdot{_lx(diff(inner,x))} = {c_lx}$."
         )
+        steps = [
+            rf"Identify outer function $\sin(u)$ and inner $u = {_lx(inner)}$.",
+            rf"Compute the inner derivative: $u' = {_lx(diff(inner, x))}$.",
+            r"Apply the **chain rule:** $\frac{d}{dx}[\sin u] = \cos(u)\cdot u'$.",
+            rf"Substitute: $\cos({_lx(inner)})\cdot {_lx(diff(inner, x))} = {c_lx}$.",
+        ]
         return _q("deriv_chain_sin", "derivatives",
                   rf"Find $\frac{{d}}{{dx}}\left[\sin\!\left({_lx(inner)}\right)\right]$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
     elif choice == 1:
         # cos(ax)
         a = random.choice([2, 3, 4])
@@ -218,9 +247,14 @@ def gen_deriv_chain():
             rf"**Chain rule:** $\frac{{d}}{{dx}}[\cos(u)] = -\sin(u)\cdot u'$. "
             rf"With $u={_lx(inner)}$, $u'={a}$. Answer: ${c_lx}$."
         )
+        steps = [
+            rf"Let $u = {_lx(inner)}$, so $u' = {a}$.",
+            r"Apply the **chain rule:** $\frac{d}{dx}[\cos u] = -\sin(u)\cdot u'$.",
+            rf"Substitute and simplify: ${c_lx}$.",
+        ]
         return _q("deriv_chain_cos", "derivatives",
                   rf"Find $\frac{{d}}{{dx}}\left[\cos\!\left({_lx(inner)}\right)\right]$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
     elif choice == 2:
         # e^(ax^n)
         a = random.choice([1, 2, 3])
@@ -239,9 +273,14 @@ def gen_deriv_chain():
             rf"**Chain rule:** $\frac{{d}}{{dx}}[e^u] = e^u\cdot u'$. "
             rf"With $u={_lx(inner)}$, $u'={_lx(diff(inner,x))}$. Answer: ${c_lx}$."
         )
+        steps = [
+            rf"Let $u = {_lx(inner)}$, so $u' = {_lx(diff(inner, x))}$.",
+            r"Apply the **chain rule:** $\frac{d}{dx}[e^u] = e^u \cdot u'$.",
+            rf"Substitute: $e^{{{_lx(inner)}}} \cdot {_lx(diff(inner, x))} = {c_lx}$.",
+        ]
         return _q("deriv_chain_exp", "derivatives",
                   rf"Find $\frac{{d}}{{dx}}\left[e^{{{_lx(inner)}}}\right]$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
     else:
         # tan(g(x)) composed
         n = random.choice([2, 3])
@@ -259,9 +298,14 @@ def gen_deriv_chain():
             rf"**Chain rule:** $\frac{{d}}{{dx}}[\tan u] = \sec^2(u)\cdot u'$. "
             rf"With $u={_lx(inner)}$, $u'={_lx(diff(inner,x))}$. Answer: ${c_lx}$."
         )
+        steps = [
+            rf"Let $u = {_lx(inner)}$, so $u' = {_lx(diff(inner, x))}$.",
+            r"Apply the **chain rule:** $\frac{d}{dx}[\tan u] = \sec^2(u)\cdot u'$.",
+            rf"Substitute: $\sec^2({_lx(inner)}) \cdot {_lx(diff(inner, x))} = {c_lx}$.",
+        ]
         return _q("deriv_chain_tan", "derivatives",
                   rf"Find $\frac{{d}}{{dx}}\left[\tan\!\left({_lx(inner)}\right)\right]$",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
 
 
 def gen_deriv_tangent_line():
@@ -301,9 +345,15 @@ def gen_deriv_tangent_line():
         rf"slope $= f'({pt}) = {slope}$. "
         rf"Tangent line: $y - {y0} = {slope}(x - ({pt}))$ → ${correct_lx}$."
     )
+    steps = [
+        rf"Find the point on the curve: $f({pt}) = {y0}$, so the tangent passes through $({pt},\,{y0})$.",
+        rf"Differentiate: $f'(x) = {_lx(diff(expr, x))}$.",
+        rf"Slope at $x = {pt}$: $f'({pt}) = {slope}$.",
+        rf"Point-slope form: $y - {y0} = {slope}\,(x - ({pt}))$, which simplifies to ${correct_lx}$.",
+    ]
     return _q("deriv_tangent", "derivatives",
               rf"Which is an equation of the tangent line to $f(x)={_lx(expr)}$ at $x={pt}$?",
-              correct_lx, wrong, expl)
+              correct_lx, wrong, expl, steps)
 
 
 # ── Limit templates ───────────────────────────────────────────────────────────
@@ -323,9 +373,15 @@ def gen_limit_direct():
             rf"as $x \to {a}^+$, it $\to +\infty$. Since the one-sided limits differ, "
             rf"the two-sided limit does not exist."
         )
+        steps = [
+            rf"Check substitution: at $x = {a}$ the denominator is $0$ and the numerator is ${k}$, so there is a vertical asymptote.",
+            rf"As $x \to {a}^-$, the denominator $\to 0^-$, so the expression $\to -\infty$.",
+            rf"As $x \to {a}^+$, the denominator $\to 0^+$, so the expression $\to +\infty$.",
+            r"One-sided limits disagree, so the two-sided limit does **not exist**.",
+        ]
         return _q("limit_dne", "limits",
                   rf"$\displaystyle\lim_{{x \to {a}}} \dfrac{{{k}}}{{{denom_str}}}$ is",
-                  correct_lx, wrong, expl)
+                  correct_lx, wrong, expl, steps)
     else:
         # Polynomial: lim_{x→a} p(x)
         a = random.choice([-3, -2, -1, 0, 1, 2, 3])
@@ -340,9 +396,14 @@ def gen_limit_direct():
             rf"Since $p(x)$ is a polynomial, $\lim_{{x\to {a}}} p(x) = p({a}) = {val}$ "
             rf"by direct substitution."
         )
+        steps = [
+            r"Polynomials are continuous everywhere, so the limit equals the function value at the point.",
+            rf"Substitute $x = {a}$ into $p(x) = {_lx(expr)}$.",
+            rf"Evaluate: $p({a}) = {val}$.",
+        ]
         return _q("limit_direct", "limits",
                   rf"$\displaystyle\lim_{{x \to {a}}} \left({_lx(expr)}\right)$",
-                  correct_lx, wrong, expl)
+                  correct_lx, wrong, expl, steps)
 
 
 def gen_limit_zero_zero():
@@ -363,9 +424,15 @@ def gen_limit_zero_zero():
             rf"then substitute $x={a}$: result $= {val}$."
         )
     expl = rf"Indeterminate form $\frac{{0}}{{0}}$. " + factor_step
+    steps = [
+        rf"Try direct substitution $x = {a}$: numerator and denominator both equal $0$, so the form is $\frac{{0}}{{0}}$ (indeterminate).",
+        rf"Factor the numerator so that $(x - {a})$ appears, then cancel it with the denominator.",
+        rf"Substitute $x = {a}$ into the simplified expression.",
+        rf"Limit value: ${val}$.",
+    ]
     return _q("limit_zero_zero", "limits",
               rf"$\displaystyle\lim_{{x \to {a}}} \dfrac{{{_lx(numer_sym)}}}{{{_lx(denom_sym)}}}$",
-              correct_lx, wrong_vals, expl)
+              correct_lx, wrong_vals, expl, steps)
 
 
 def gen_limit_infinity():
@@ -384,9 +451,15 @@ def gen_limit_infinity():
         rf"Divide every term by $x^{n}$ (the highest power). "
         rf"Lower-degree terms vanish as $x\to\infty$, leaving $\frac{{{a}}}{{{b}}} = {correct_lx}$."
     )
+    steps = [
+        rf"Identify the highest power in numerator and denominator: $x^{{{n}}}$.",
+        rf"Divide every term in both numerator and denominator by $x^{{{n}}}$.",
+        r"As $x \to \infty$, every term with a negative power of $x$ tends to $0$.",
+        rf"The limit reduces to the ratio of leading coefficients: $\dfrac{{{a}}}{{{b}}} = {correct_lx}$.",
+    ]
     return _q("limit_infinity", "limits",
               rf"$\displaystyle\lim_{{x \to \infty}} \dfrac{{{_lx(numer)}}}{{{_lx(denom)}}}$",
-              correct_lx, wrong, expl)
+              correct_lx, wrong, expl, steps)
 
 
 # ── Integral templates ────────────────────────────────────────────────────────
@@ -411,9 +484,14 @@ def gen_integral_power():
             rf"**Power rule for integrals:** $\int x^n\,dx = \frac{{x^{{n+1}}}}{{n+1}} + C$ $(n\neq -1)$. "
             rf"Here $n={_lx(n)}$, so $\int {_lx(expr)}\,dx = {c_lx}$."
         )
+        steps = [
+            r"Apply the **power rule for integrals:** $\int x^n\,dx = \dfrac{x^{n+1}}{n+1} + C$ (valid for $n \neq -1$).",
+            rf"Here $n = {_lx(n)}$, so the new exponent is $n + 1 = {_lx(n+1)}$.",
+            rf"Multiply by the coefficient ${_lx(a)}$ and divide by $n + 1$: ${c_lx}$.",
+        ]
         return _q("integral_power", "integrals",
                   rf"$\displaystyle\int {_lx(expr)}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     elif choice == 1:
         fn, fn_name, antideriv, sign = random.choice([
             (sin(x), r"\sin(x)", -cos(x), ""),
@@ -431,16 +509,25 @@ def gen_integral_power():
             rf"$\int \sin x\,dx = -\cos x + C$; $\int \cos x\,dx = \sin x + C$. "
             rf"Answer: ${c_lx}$."
         )
+        steps = [
+            r"Recall the basic trig antiderivatives: $\int \sin x\,dx = -\cos x + C$ and $\int \cos x\,dx = \sin x + C$.",
+            rf"Identify which rule applies to $\int {fn_name}\,dx$.",
+            rf"Result: ${c_lx}$.",
+        ]
         return _q("integral_trig", "integrals",
                   rf"$\displaystyle\int {fn_name}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     else:
         c_lx = r"e^{x} + C"
         d = [r"e^{x-1} + C", r"\frac{e^{x+1}}{x+1} + C", r"xe^{x} + C", r"e^{x} \cdot x + C"]
         expl = r"**Exponential rule:** $\int e^x\,dx = e^x + C$."
+        steps = [
+            r"The exponential function is its own antiderivative.",
+            r"Apply the rule: $\int e^x\,dx = e^x + C$.",
+        ]
         return _q("integral_exp", "integrals",
                   r"$\displaystyle\int e^{x}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
 
 
 def gen_integral_substitution():
@@ -465,10 +552,16 @@ def gen_integral_substitution():
             rf"so $x^{{{n}}}\,dx = \frac{{1}}{{{power}}}du$. "
             rf"$\int e^u\cdot\frac{{1}}{{{power}}}\,du = \frac{{1}}{{{power}}}e^u + C = {c_lx}$."
         )
+        steps = [
+            rf"Pick the substitution $u = {_lx(inner)}$ since its derivative produces the $x^{{{n}}}$ factor.",
+            rf"Differentiate: $du = {power}x^{{{n}}}\,dx$, so $x^{{{n}}}\,dx = \dfrac{{1}}{{{power}}}\,du$.",
+            rf"Rewrite the integral in $u$: $\dfrac{{1}}{{{power}}}\int e^u\,du$.",
+            rf"Integrate and substitute back: $\dfrac{{1}}{{{power}}}\,e^u + C = {c_lx}$.",
+        ]
         expr_str = rf"x^{{{n}}} e^{{{_lx(inner)}}}"
         return _q("integral_sub_exp", "integrals",
                   rf"$\displaystyle\int {expr_str}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     elif choice == 1:
         # ∫ cot²x csc²x dx = -cot³x/3 + C   [like CLEP Q30]
         c_lx = r"-\frac{\cot^{3} x}{3} + C"
@@ -482,9 +575,15 @@ def gen_integral_substitution():
             r"Let $u = \cot x$, $du = -\csc^2 x\,dx$. "
             r"$\int \cot^2 x \csc^2 x\,dx = -\int u^2\,du = -\frac{u^3}{3} + C = -\frac{\cot^3 x}{3} + C$."
         )
+        steps = [
+            r"Let $u = \cot x$. Then $du = -\csc^2 x\,dx$, so $\csc^2 x\,dx = -du$.",
+            r"Rewrite the integral: $\int \cot^2 x \cdot \csc^2 x\,dx = -\int u^2\,du$.",
+            r"Integrate in $u$: $-\dfrac{u^3}{3} + C$.",
+            r"Substitute back: $-\dfrac{\cot^3 x}{3} + C$.",
+        ]
         return _q("integral_sub_trig", "integrals",
                   r"$\displaystyle\int \cot^2 x \csc^2 x\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     else:
         # ∫ (ax+b)^n dx  simple linear substitution
         a_val = random.choice([2, 3])
@@ -502,9 +601,15 @@ def gen_integral_substitution():
             rf"Let $u={_lx(inner_expr)}$, $du={a_val}\,dx$. "
             rf"$\frac{{1}}{{{a_val}}}\int u^{n}\,du = \frac{{u^{{{n+1}}}}}{{{a_val}({n+1})}} + C = {c_lx}$."
         )
+        steps = [
+            rf"Let $u = {_lx(inner_expr)}$.",
+            rf"Then $du = {a_val}\,dx$, so $dx = \dfrac{{1}}{{{a_val}}}\,du$.",
+            rf"Rewrite: $\dfrac{{1}}{{{a_val}}}\int u^{{{n}}}\,du = \dfrac{{u^{{{n+1}}}}}{{{a_val}({n+1})}} + C$.",
+            rf"Substitute back: ${c_lx}$.",
+        ]
         return _q("integral_sub_lin", "integrals",
                   rf"$\displaystyle\int ({_lx(inner_expr)})^{{{n}}}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
 
 
 def gen_integral_definite():
@@ -523,9 +628,15 @@ def gen_integral_definite():
             rf"\left[\frac{{x^{{{n+1}}}}}{{{n+1}}}\right]_{{{a_val}}}^{{{b_val}}} "
             rf"= \frac{{{b_val}^{{{n+1}}}}}{{{n+1}}} - \frac{{{a_val}^{{{n+1}}}}}{{{n+1}}} = {val}$."
         )
+        steps = [
+            rf"Find the antiderivative: $\int x^{{{n}}}\,dx = \dfrac{{x^{{{n+1}}}}}{{{n+1}}}$.",
+            rf"Evaluate at the upper limit $x = {b_val}$: $\dfrac{{{b_val}^{{{n+1}}}}}{{{n+1}}}$.",
+            rf"Subtract value at lower limit $x = {a_val}$: $\dfrac{{{a_val}^{{{n+1}}}}}{{{n+1}}}$.",
+            rf"Simplify: ${val}$.",
+        ]
         return _q("integral_def_power", "integrals",
                   rf"$\displaystyle\int_{{{a_val}}}^{{{b_val}}} x^{{{n}}}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     elif choice == 1:
         # ∫_a^b 1/(x+1) dx  [like CLEP Q15]
         a_val, b_val = random.choice([(-4, -2), (0, 2), (1, 4)])
@@ -543,9 +654,15 @@ def gen_integral_definite():
             rf"$\int\frac{{1}}{{x+1}}\,dx = \ln|x+1| + C$. "
             rf"Evaluate from ${a_val}$ to ${b_val}$: $\ln|{b_val}+1| - \ln|{a_val}+1| = {c_lx}$."
         )
+        steps = [
+            r"Antiderivative: $\int \dfrac{1}{x+1}\,dx = \ln|x+1| + C$.",
+            rf"Evaluate at upper limit $x = {b_val}$: $\ln|{b_val}+1|$.",
+            rf"Subtract value at lower limit $x = {a_val}$: $\ln|{a_val}+1|$.",
+            rf"Combine: ${c_lx}$.",
+        ]
         return _q("integral_def_log", "integrals",
                   rf"$\displaystyle\int_{{{a_val}}}^{{{b_val}}} \dfrac{{1}}{{x+1}}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     elif choice == 2:
         a_val, b_val = 0, random.choice([1, 2, 3])
         # ∫ e^x dx = e^b - 1
@@ -557,9 +674,15 @@ def gen_integral_definite():
             rf"$\int e^x\,dx = e^x + C$. "
             rf"$\left[e^x\right]_0^{{{b_val}}} = e^{{{b_val}}} - e^0 = {c_lx}$."
         )
+        steps = [
+            r"Antiderivative: $\int e^x\,dx = e^x + C$.",
+            rf"Evaluate at $x = {b_val}$: $e^{{{b_val}}}$.",
+            rf"Subtract value at $x = 0$: $e^0 = 1$.",
+            rf"Result: $e^{{{b_val}}} - 1 = {c_lx}$.",
+        ]
         return _q("integral_def_exp", "integrals",
                   rf"$\displaystyle\int_0^{{{b_val}}} e^x\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     else:
         # ∫_a^b polynomial
         a_val, b_val = random.choice([(0, 2), (-1, 1), (0, 3), (1, 4)])
@@ -572,9 +695,14 @@ def gen_integral_definite():
             rf"$\int_{{{a_val}}}^{{{b_val}}} {_lx(expr)}\,dx = "
             rf"\left[{_lx(coef * x**3 / 3)}\right]_{{{a_val}}}^{{{b_val}}} = {val}$."
         )
+        steps = [
+            rf"Find the antiderivative of ${_lx(expr)}$ using the power rule: ${_lx(coef * x**3 / 3)}$.",
+            rf"Evaluate at upper limit $x = {b_val}$ and subtract the value at $x = {a_val}$.",
+            rf"Result: ${val}$.",
+        ]
         return _q("integral_def_poly", "integrals",
                   rf"$\displaystyle\int_{{{a_val}}}^{{{b_val}}} {_lx(expr)}\,dx =$",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
 
 
 # ── Application templates ─────────────────────────────────────────────────────
@@ -596,10 +724,16 @@ def gen_app_velocity():
             rf"$v(t) = s'(t) = {_lx(vel)}$. Set $v=0$: $t = {t_star}$ sec. "
             rf"Height: $s({t_star}) = -16({t_star})^2 + {v0}({t_star}) + {s0} = {height}$ ft."
         )
+        steps = [
+            rf"Velocity is the derivative of position: $v(t) = s'(t) = {_lx(vel)}$.",
+            rf"Set $v(t) = 0$ and solve for $t$: $t = {t_star}$ seconds.",
+            rf"Substitute $t = {t_star}$ into $s(t)$ to find the height.",
+            rf"Result: $s({t_star}) = {height}$ ft.",
+        ]
         return _q("app_velocity", "applications",
                   rf"The height (ft) of a ball is $s(t)={_lx(expr)}$ where $t$ is in seconds. "
                   rf"What is the height when the velocity is zero?",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
     else:
         # Given acceleration, find position at t=1 with ICs
         n = random.randint(2, 3)
@@ -616,10 +750,15 @@ def gen_app_velocity():
             rf"Integrate again: $s(t)={_lx(pos_expr)}$. "
             rf"At $t=1$: $s(1)\approx{c_lx}$."
         )
+        steps = [
+            rf"Integrate acceleration to find velocity: $v(t) = \int {_lx(acc_expr)}\,dt = {_lx(vel_expr)}$. (Constant is $0$ because $v(0) = 0$.)",
+            rf"Integrate velocity to find position: $s(t) = \int v(t)\,dt + 12 = {_lx(pos_expr)}$. (Constant is $12$ because $s(0) = 12$.)",
+            rf"Evaluate at $t = 1$: $s(1) \approx {c_lx}$.",
+        ]
         return _q("app_accel", "applications",
                   rf"A particle's acceleration is $a(t)={_lx(acc_expr)}$. "
                   rf"At $t=0$, velocity is 0 and position is 12. What is the position at $t=1$?",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
 
 
 def gen_app_ftc():
@@ -652,9 +791,14 @@ def gen_app_ftc():
         rf"By the **Fundamental Theorem:** $F'(x) = f(x)$, so "
         rf"$F'({pt_str}) = {fn_name.replace('t', pt_str)} = {c_lx}$."
     )
+    steps = [
+        r"By the **Fundamental Theorem of Calculus:** if $F(x) = \int_0^x f(t)\,dt$, then $F'(x) = f(x)$.",
+        rf"So $F'(x) = {fn_name.replace('t', 'x')}$.",
+        rf"Substitute $x = {pt_str}$: $F'({pt_str}) = {c_lx}$.",
+    ]
     return _q("app_ftc", "applications",
               rf"If $F(x) = \displaystyle\int_0^x {fn_name}\,dt$, then $F'\!\left({pt_str}\right) =$",
-              c_lx, d, expl)
+              c_lx, d, expl, steps)
 
 
 def gen_app_average_value():
@@ -671,9 +815,15 @@ def gen_app_average_value():
             rf"**Average value** $= \frac{{1}}{{{b_val}-({a_val})}}\int_{{{a_val}}}^{{{b_val}}} f(x)\,dx$. "
             rf"Compute the integral, divide by ${b_val - a_val}$: ${c_lx}$."
         )
+        steps = [
+            r"Use the **average value** formula: $\bar f = \dfrac{1}{b - a}\int_a^b f(x)\,dx$.",
+            rf"Here $b - a = {b_val} - ({a_val}) = {b_val - a_val}$.",
+            rf"Compute $\int_{{{a_val}}}^{{{b_val}}} \left({_lx(expr)}\right)\,dx$.",
+            rf"Divide the integral by ${b_val - a_val}$: ${c_lx}$.",
+        ]
         return _q("app_avg_val", "applications",
                   rf"What is the average value of $f(x)={_lx(expr)}$ on $[{a_val},{b_val}]$?",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     else:
         # Average rate of change: (f(b)-f(a))/(b-a)  like CLEP Q35
         fn, fn_name = random.choice([(cos(x), r"\cos x"), (sin(x), r"\sin x")])
@@ -685,9 +835,14 @@ def gen_app_average_value():
             rf"**Average rate of change** $= \frac{{f({b_str})-f(0)}}{{{b_str}-0}} = "
             rf"\frac{{{_lx(fn.subs(x,sp.pi))}-{_lx(fn.subs(x,0))}}}{{\pi}} = {c_lx}$."
         )
+        steps = [
+            r"Use the **average rate of change** formula: $\dfrac{f(b) - f(a)}{b - a}$.",
+            rf"Compute $f({b_str}) = {_lx(fn.subs(x, sp.pi))}$ and $f(0) = {_lx(fn.subs(x, 0))}$.",
+            rf"Divide the difference by $\pi - 0 = \pi$: ${c_lx}$.",
+        ]
         return _q("app_avg_rate", "applications",
                   rf"What is the average rate of change of $f(x) = {fn_name}$ on $[0,\pi]$?",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
 
 
 def gen_app_optimization():
@@ -706,11 +861,17 @@ def gen_app_optimization():
             rf"$A = x({L}-2x) = {L}x - 2x^2$. $A' = {L}-4x = 0 \Rightarrow x = {x_opt}$. "
             rf"Parallel side $= {L} - 2({x_opt}) = {parallel}$ yards."
         )
+        steps = [
+            rf"Let $x$ be the perpendicular side. The parallel side uses the rest of the fence: ${L} - 2x$.",
+            rf"Area as a function of $x$: $A(x) = x({L} - 2x) = {L}x - 2x^2$.",
+            rf"Maximize: set $A'(x) = {L} - 4x = 0$, giving $x = {x_opt}$.",
+            rf"Parallel side $= {L} - 2({x_opt}) = {parallel}$ yards.",
+        ]
         return _q("app_optimize_fence", "applications",
                   rf"A rectangular field borders a river (no fence needed on that side). "
                   rf"With {L} yards of fencing for 3 sides, what length parallel to the river "
                   rf"maximizes the area?",
-                  c_lx, d, expl)
+                  c_lx, d, expl, steps)
     else:
         # Find critical point of cubic
         a_c = random.choice([3, 4])
@@ -736,9 +897,15 @@ def gen_app_optimization():
             rf"$f''({_lx(pt_crit)}) {'>0' if second_d > 0 else '<0'} \Rightarrow$ {verdict} there. "
             rf"Two inflection points exist."
         )
+        steps = [
+            rf"Compute $f'(x) = {_lx(deriv_expr)}$.",
+            rf"Find critical numbers by solving $f'(x) = 0$: $x = 0$ and $x = {_lx(pt_crit)}$.",
+            rf"Apply the second derivative test: $f''(x) = {_lx(diff(deriv_expr, x))}$, and $f''({_lx(pt_crit)}) {'> 0' if second_d > 0 else '< 0'}$, so there is a {verdict}.",
+            r"Inflection points occur where $f''(x) = 0$ and concavity changes — two such points exist.",
+        ]
         return _q("app_optimize_crit", "applications",
                   rf"Which is true about $f(x)={_lx(expr)}$?",
-                  c_lx, wrong, expl)
+                  c_lx, wrong, expl, steps)
 
 
 # ── Registry ──────────────────────────────────────────────────────────────────

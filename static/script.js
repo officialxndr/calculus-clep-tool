@@ -439,25 +439,34 @@ function renderPracticeQuestion(q) {
         Correct answer: <strong>${data.correct_label}</strong>. `;
       fb.style.display = "block";
 
-      // Step-by-step solution (collapsed by default)
+      // Explanation paragraph (shown immediately)
       if (data.explanation) {
         const exDiv = document.createElement("div");
+        exDiv.className = "practice-explanation";
         exDiv.style.marginTop = ".6rem";
+        exDiv.innerHTML = processStepHtml(data.explanation);
+        fb.appendChild(exDiv);
+      }
+
+      // Step-by-step solution toggle (collapsed by default)
+      if ((data.steps && data.steps.length) || data.explanation) {
+        const wrap = document.createElement("div");
+        wrap.style.marginTop = ".5rem";
 
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
         toggleBtn.className = "steps-toggle-btn";
         toggleBtn.textContent = "Show step-by-step solution";
-        exDiv.appendChild(toggleBtn);
+        wrap.appendChild(toggleBtn);
 
         const stepsContainer = document.createElement("div");
         stepsContainer.style.display = "none";
         stepsContainer.style.marginTop = ".5rem";
-        exDiv.appendChild(stepsContainer);
+        wrap.appendChild(stepsContainer);
 
         toggleBtn.addEventListener("click", () => {
           if (stepsContainer.children.length === 0) {
-            renderExplanationSteps(stepsContainer, data.explanation);
+            renderExplanationSteps(stepsContainer, data.explanation, data.steps);
           }
           const hidden = stepsContainer.style.display === "none";
           stepsContainer.style.display = hidden ? "block" : "none";
@@ -466,8 +475,14 @@ function renderPracticeQuestion(q) {
             : "Show step-by-step solution";
         });
 
-        fb.appendChild(exDiv);
+        fb.appendChild(wrap);
       }
+
+      // Render any inline math in the feedback block (paragraph + steps when expanded)
+      renderMathInElement(fb, {
+        delimiters: [{ left: "$", right: "$", display: false }, { left: "$$", right: "$$", display: true }],
+        throwOnError: false,
+      });
 
       // Replace Check button with Next button
       document.getElementById("pq-check-btn").replaceWith(
@@ -512,13 +527,16 @@ function splitExplanationSteps(text) {
   });
 }
 
-/** Render an explanation as a numbered step list (reuses .steps-list styling). */
-function renderExplanationSteps(container, explanation) {
-  const steps = splitExplanationSteps(explanation);
-  if (!steps.length) return;
+/** Render a numbered step list. Uses the structured `steps` array when provided,
+ *  otherwise falls back to splitting an explanation string at sentence boundaries. */
+function renderExplanationSteps(container, explanation, steps) {
+  const list = (Array.isArray(steps) && steps.length)
+    ? steps
+    : splitExplanationSteps(explanation);
+  if (!list.length) return;
   const ol = document.createElement("ol");
   ol.className = "steps-list";
-  steps.forEach(s => {
+  list.forEach(s => {
     const li = document.createElement("li");
     li.innerHTML = processStepHtml(s);
     ol.appendChild(li);
@@ -802,14 +820,40 @@ function renderExamResults(data) {
 
     if (r.explanation) {
       const exDiv = document.createElement("div");
+      exDiv.className = "review-explanation";
       exDiv.style.marginTop = ".5rem";
-      const label = document.createElement("div");
-      label.className = "review-label";
-      label.textContent = "Step-by-step solution";
-      label.style.marginBottom = ".4rem";
-      exDiv.appendChild(label);
-      renderExplanationSteps(exDiv, r.explanation);
+      exDiv.innerHTML = `<span class="review-label">Explanation:</span> ` + processStepHtml(r.explanation);
       body.appendChild(exDiv);
+    }
+
+    if ((r.steps && r.steps.length) || r.explanation) {
+      const stepsWrap = document.createElement("div");
+      stepsWrap.style.marginTop = ".5rem";
+
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "steps-toggle-btn";
+      toggleBtn.textContent = "Show step-by-step solution";
+      stepsWrap.appendChild(toggleBtn);
+
+      const stepsContainer = document.createElement("div");
+      stepsContainer.style.display = "none";
+      stepsContainer.style.marginTop = ".5rem";
+      stepsWrap.appendChild(stepsContainer);
+
+      toggleBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (stepsContainer.children.length === 0) {
+          renderExplanationSteps(stepsContainer, r.explanation, r.steps);
+        }
+        const hidden = stepsContainer.style.display === "none";
+        stepsContainer.style.display = hidden ? "block" : "none";
+        toggleBtn.textContent = hidden
+          ? "Hide step-by-step solution"
+          : "Show step-by-step solution";
+      });
+
+      body.appendChild(stepsWrap);
     }
 
     // Render math in body after building

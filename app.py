@@ -127,6 +127,7 @@ def practice_check():
         "correct_label": correct_choice["label"],
         "correct_latex": correct_choice["latex"],
         "explanation": q.get("explanation", ""),
+        "steps": q.get("steps", []),
     })
 
 
@@ -188,6 +189,7 @@ def exam_grade():
             "correct_latex": q["choices"][correct_idx]["latex"],
             "is_correct": is_correct,
             "explanation": q.get("explanation", ""),
+            "steps": q.get("steps", []),
         })
 
     save_exam_result(exam_id, answers, score)
