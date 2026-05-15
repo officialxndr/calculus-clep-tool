@@ -15,8 +15,40 @@
   --answer-border: #86efac;
   --step-bg:    #f8fafc;
   --error:      #ef4444;
+  --field-bg:   #fafbfd;
+  --correct-bg: #f0fdf4;
+  --correct-border: #86efac;
+  --correct-text: #065f46;
+  --wrong-bg:   #fef2f2;
+  --wrong-border: #fecaca;
+  --wrong-text: #991b1b;
   --radius:     10px;
   --shadow:     0 1px 4px rgba(0,0,0,.08);
+}
+
+[data-theme="dark"] {
+  --blue:       #60a5fa;
+  --blue-dark:  #93c5fd;
+  --blue-light: #1e3a5f;
+  --green:      #34d399;
+  --bg:         #0f172a;
+  --surface:    #1e293b;
+  --border:     #334155;
+  --text:       #e2e8f0;
+  --muted:      #94a3b8;
+  --answer-bg:  #064e3b;
+  --answer-border: #10b981;
+  --step-bg:    #172033;
+  --error:      #f87171;
+  --field-bg:   #172033;
+  --correct-bg: #064e3b;
+  --correct-border: #10b981;
+  --correct-text: #a7f3d0;
+  --wrong-bg:   #4c1d1d;
+  --wrong-border: #f87171;
+  --wrong-text: #fecaca;
+  --shadow:     0 1px 4px rgba(0,0,0,.4);
+  color-scheme: dark;
 }
 
 body {
@@ -24,6 +56,7 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  transition: background .2s, color .2s;
 }
 
 /* ── Header ──────────────────────────────────────────────────── */
@@ -140,15 +173,15 @@ body {
 .mc-option.selected { border-color: var(--blue); background: var(--blue-light); }
 
 .mc-option.correct {
-  border-color: #10b981;
-  background: #f0fdf4;
-  color: #065f46;
+  border-color: var(--correct-border);
+  background: var(--correct-bg);
+  color: var(--correct-text);
 }
 
 .mc-option.wrong {
-  border-color: #ef4444;
-  background: #fef2f2;
-  color: #991b1b;
+  border-color: var(--wrong-border);
+  background: var(--wrong-bg);
+  color: var(--wrong-text);
 }
 
 .mc-label {
@@ -165,8 +198,8 @@ body {
 }
 
 .mc-option.selected .mc-label { background: var(--blue); color: #fff; }
-.mc-option.correct .mc-label  { background: #10b981; color: #fff; }
-.mc-option.wrong .mc-label    { background: #ef4444; color: #fff; }
+.mc-option.correct .mc-label  { background: var(--correct-border); color: #fff; }
+.mc-option.wrong .mc-label    { background: var(--wrong-border); color: #fff; }
 
 .practice-check-row {
   margin-top: 1.25rem;
@@ -185,15 +218,15 @@ body {
 }
 
 .practice-feedback.correct-fb {
-  background: #f0fdf4;
-  border: 1px solid #86efac;
-  color: #065f46;
+  background: var(--correct-bg);
+  border: 1px solid var(--correct-border);
+  color: var(--correct-text);
 }
 
 .practice-feedback.wrong-fb {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: var(--wrong-bg);
+  border: 1px solid var(--wrong-border);
+  color: var(--wrong-text);
 }
 
 .steps-toggle-btn {
@@ -280,7 +313,7 @@ body {
   border-radius: 6px;
 }
 
-.timer.danger { color: var(--error); background: #fef2f2; }
+.timer.danger { color: var(--error); background: var(--wrong-bg); }
 
 .exam-layout {
   display: grid;
@@ -397,8 +430,8 @@ body {
 
 .review-item-header:hover { background: var(--bg); }
 
-.review-item.correct-item .review-item-header { border-left: 3px solid #10b981; }
-.review-item.wrong-item .review-item-header   { border-left: 3px solid #ef4444; }
+.review-item.correct-item .review-item-header { border-left: 3px solid var(--correct-border); }
+.review-item.wrong-item .review-item-header   { border-left: 3px solid var(--wrong-border); }
 
 .review-icon { font-size: 1rem; }
 .review-num  { font-weight: 700; font-size: .85rem; color: var(--muted); min-width: 2rem; }
@@ -569,7 +602,7 @@ body {
   border: 1.5px solid var(--border);
   border-radius: 8px;
   padding: .5rem;
-  background: #fafbfd;
+  background: var(--field-bg);
   transition: border-color .15s;
   min-height: 64px;
   display: flex;
@@ -623,8 +656,8 @@ math-field {
 .btn-primary   { background: var(--blue); color: #fff; }
 .btn-primary:hover { background: var(--blue-dark); }
 
-.btn-secondary { background: #e0edff; color: var(--blue-dark); }
-.btn-secondary:hover { background: #c7dcff; }
+.btn-secondary { background: var(--blue-light); color: var(--blue-dark); }
+.btn-secondary:hover { background: var(--blue-light); filter: brightness(.92); }
 
 .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
 .btn-ghost:hover { background: var(--bg); }
@@ -633,8 +666,8 @@ math-field {
 .error-msg {
   margin-top: .75rem;
   padding: .55rem .9rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--wrong-bg);
+  border: 1px solid var(--wrong-border);
   color: var(--error);
   border-radius: 6px;
   font-size: .88rem;
@@ -728,17 +761,17 @@ math-field {
 
 .similar-chip {
   background: var(--blue-light);
-  border: 1.5px solid #bfdbfe;
+  border: 1.5px solid var(--blue-light);
   border-radius: 8px;
   padding: .55rem .7rem;
   text-align: center;
   font-size: 1rem;
   cursor: pointer;
   transition: background .15s, border-color .15s;
+  color: var(--text);
 }
 
 .similar-chip:hover {
-  background: #dbeafe;
   border-color: var(--blue);
 }
 
@@ -807,7 +840,7 @@ math-field {
 }
 
 .history-item:hover .history-delete { opacity: 1; }
-.history-delete:hover { color: var(--error); background: #fef2f2; }
+.history-delete:hover { color: var(--error); background: var(--wrong-bg); }
 
 /* ── Loading spinner ─────────────────────────────────────────── */
 .spinner {
@@ -825,3 +858,35 @@ math-field {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .btn-primary.loading { pointer-events: none; opacity: .8; }
+
+/* ── Theme toggle ────────────────────────────────────────────── */
+.theme-toggle {
+  margin-left: auto;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background .15s, border-color .15s, color .15s, transform .12s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.theme-toggle:active { transform: scale(.92); }
+
+.theme-toggle-icon { display: inline-block; }
+
+[data-theme="dark"] math-field {
+  background: var(--field-bg);
+  color: var(--text);
+}
